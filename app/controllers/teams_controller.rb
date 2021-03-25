@@ -15,7 +15,11 @@ class TeamsController < ApplicationController
     @team = Team.new
   end
 
-  def edit; end
+  def edit
+    unless current_user == @team.owner
+      redirect_to dashboard_path, notice: "チームを編集する権限がありません。"
+    end
+  end
 
   def create
     @team = Team.new(team_params)
@@ -41,6 +45,17 @@ class TeamsController < ApplicationController
   def destroy
     @team.destroy
     redirect_to teams_url, notice: I18n.t('views.messages.delete_team')
+  end
+
+  def owner_change
+    @working_team.owner_id = params[:id]
+    @email = @working_team.owner.email
+    if @working_team.save
+      OwnerChangeMailer.owner_change_mail(@email, @working_team).deliver
+      redirect_to team_path(@working_team), notice:"リーダーを変更しました"
+    else
+      redirect_to team_path(@working_team), notice:"リーダーの変更ができませんでした"
+    end
   end
 
   def dashboard
