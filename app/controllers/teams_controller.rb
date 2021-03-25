@@ -43,6 +43,17 @@ class TeamsController < ApplicationController
     redirect_to teams_url, notice: I18n.t('views.messages.delete_team')
   end
 
+  def owner_change
+    @working_team.owner_id = params[:id]
+    @email = @working_team.owner.email
+    if @working_team.save
+      OwnerChangeMailer.owner_change_mail(@email, @working_team).deliver
+      redirect_to team_path(@working_team), notice:"リーダーを変更しました"
+    else
+      redirect_to team_path(@working_team), notice:"リーダーの変更ができませんでした"
+    end
+  end
+
   def dashboard
     @team = current_user.keep_team_id ? Team.find(current_user.keep_team_id) : current_user.teams.first
   end
